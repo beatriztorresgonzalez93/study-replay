@@ -5,12 +5,25 @@ function normalizeUri(uri) {
   if (!u.startsWith("mongodb://") && !u.startsWith("mongodb+srv://")) {
     throw new Error("MONGODB_URI debe ser una cadena mongodb:// o mongodb+srv://");
   }
-  const [base, query] = u.split("?");
-  const pathStart = base.indexOf("/", base.indexOf("://") + 3);
-  const hasDb = pathStart !== -1 && base.slice(pathStart + 1).length > 0;
-  if (!hasDb) {
-    u = `${base}/study-replay${query ? `?${query}` : ""}`;
-  }
+
+  const qIndex = u.indexOf("?");
+  const query = qIndex >= 0 ? u.slice(qIndex + 1) : "";
+  const base = qIndex >= 0 ? u.slice(0, qIndex) : u;
+
+  const protoEnd = base.indexOf("://") + 3;
+  const slashIndex = base.indexOf("/", protoEnd);
+  const authority = slashIndex >= 0 ? base.slice(0, slashIndex) : base;
+  let dbName =
+    slashIndex >= 0
+      ? base.slice(slashIndex + 1).replace(/^\/+|\/+$/g, "")
+      : "";
+
+  if (!dbName) dbName = "study-replay";
+
+  u = `${authority}/${dbName}`;
+  if (query) u += `?${query}`;
+  u = u.replace(/(@[^/?#]+)\/{2,}/g, "$1/");
+
   if (!u.includes("retryWrites")) {
     u += `${u.includes("?") ? "&" : "?"}retryWrites=true&w=majority`;
   }
@@ -33,18 +46,22 @@ function fixFile(path) {
   }
 
   if (!uri) {
-    throw new Error(`${path}: falta MONGODB_URI`);
+    console.log(`${path}: sin MONGODB_URI, omitido`);
+    return;
   }
 
   const fixed = normalizeUri(uri);
+  const hadDoubleSlash = uri.includes(".net//") || uri.includes(".net///");
+
   const body = `# MongoDB Atlas — Connect → Drivers → Node.js
-# Variable usada por Next.js (no subas este archivo a GitHub)
+# Formato: ...mongodb.net/study-replay  (una sola /, no //)
 MONGODB_URI=${fixed}
 `;
 
   writeFileSync(path, body, "utf8");
-  console.log(`${path}: OK (longitud ${fixed.length}, incluye /study-replay)`);
+  console.log(
+    `${path}: OK${hadDoubleSlash ? " (corregido doble /)" : ""} → db=study-replay`,
+  );
 }
 
 fixFile(".env.local");
-fixFile(".env");

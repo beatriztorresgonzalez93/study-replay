@@ -25,32 +25,59 @@ if (!global.mongooseCache) {
   global.mongooseCache = cached;
 }
 
-/** Asegura que la URI incluya nombre de base (p. ej. /study-replay) */
+/**
+ * Corrige URIs mal formadas (p. ej. //study-replay → study-replay).
+ * Un doble slash provoca el error "Invalid namespace: /study-replay.notes".
+ */
 export function normalizeMongoUri(uri: string): string {
-  const trimmed = uri.trim();
+  const trimmed = uri.trim().replace(/^["']|["']$/g, "");
 
-  if (!trimmed.startsWith("mongodb://") && !trimmed.startsWith("mongodb+srv://")) {
+  if (
+    !trimmed.startsWith("mongodb://") &&
+    !trimmed.startsWith("mongodb+srv://")
+  ) {
     throw new Error(
       "MONGODB_URI debe empezar por mongodb:// o mongodb+srv:// (no uses una API key suelta)",
     );
   }
 
-  const [base, query] = trimmed.split("?");
-  const pathStart = base.indexOf("/", base.indexOf("://") + 3);
-  const hasDbName =
-    pathStart !== -1 && base.slice(pathStart + 1).length > 0;
+  const qIndex = trimmed.indexOf("?");
+  const query = qIndex >= 0 ? trimmed.slice(qIndex + 1) : "";
+  const authorityAndPath = qIndex >= 0 ? trimmed.slice(0, qIndex) : trimmed;
 
-  if (hasDbName) {
-    return trimmed;
+  const protoEnd = authorityAndPath.indexOf("://") + 3;
+  const slashIndex = authorityAndPath.indexOf("/", protoEnd);
+
+  const authority =
+    slashIndex >= 0
+      ? authorityAndPath.slice(0, slashIndex)
+      : authorityAndPath;
+
+  let dbName =
+    slashIndex >= 0
+      ? authorityAndPath.slice(slashIndex + 1).replace(/^\/+|\/+$/g, "")
+      : "";
+
+  if (!dbName) {
+    dbName = DEFAULT_DB;
   }
 
-  const withDb = `${base}/${DEFAULT_DB}`;
-  return query ? `${withDb}?${query}` : withDb;
+  let normalized = `${authority}/${dbName}`;
+  if (query) {
+    normalized += `?${query}`;
+  }
+
+  // Por si queda algún // entre host y base de datos
+  normalized = normalized.replace(/(@[^/?#]+)\/{2,}/g, "$1/");
+
+  return normalized;
 }
 
 export async function connectDB() {
   if (!MONGODB_URI) {
-    throw new Error("Define MONGODB_URI en .env.local (o en Vercel → Environment Variables)");
+    throw new Error(
+      "Define MONGODB_URI en .env.local (o en Vercel → Environment Variables)",
+    );
   }
 
   const uri = normalizeMongoUri(MONGODB_URI);
@@ -69,6 +96,11 @@ export async function connectDB() {
         cached.promise = null;
         const msg = err.message ?? "";
 
+        if (msg.includes("Invalid namespace")) {
+          throw new Error(
+            "URI de MongoDB mal formada (doble / en el nombre de la base). Usa: ...mongodb.net/study-replay sin //",
+          );
+        }
         if (msg.includes("querySrv") || msg.includes("ECONNREFUSED")) {
           throw new Error(
             "No se pudo resolver el cluster (DNS/SRV). En Atlas: Connect → copia la cadena completa. En local con Windows, prueba la cadena «Standard» (sin +srv) o permite 0.0.0.0/0 en Network Access.",
