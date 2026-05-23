@@ -20,10 +20,14 @@ export default async function Home({
   let notes: Awaited<ReturnType<typeof getNotes>> = [];
   let dbError = false;
 
+  let dbErrorMessage: string | null = null;
+
   try {
     notes = await getNotes({ type });
-  } catch {
+  } catch (err) {
     dbError = true;
+    dbErrorMessage =
+      err instanceof Error ? err.message : "Error de conexión a MongoDB";
   }
 
   return (
@@ -57,16 +61,18 @@ export default async function Home({
             </p>
             <p className="mt-2 font-semibold text-amber-200">MongoDB no conectado</p>
             <p className="mt-2 text-sm text-zinc-500">
-              Crea{" "}
-              <code className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-xs text-cyan-400">
-                .env.local
-              </code>{" "}
-              con{" "}
+              Variable{" "}
               <code className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-xs text-cyan-400">
                 MONGODB_URI
               </code>{" "}
-              y reinicia el servidor.
+              en <code className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-xs text-cyan-400">.env.local</code>{" "}
+              o en Vercel. Cadena de Atlas (Connect → Drivers), no la API key.
             </p>
+            {dbErrorMessage && (
+              <p className="mt-3 rounded-lg bg-black/40 p-3 font-mono text-xs leading-relaxed text-rose-300/90">
+                {dbErrorMessage}
+              </p>
+            )}
           </div>
         ) : notes.length === 0 ? (
           <div className="glass mt-16 rounded-2xl p-10 text-center">
