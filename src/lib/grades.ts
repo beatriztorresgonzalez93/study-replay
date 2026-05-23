@@ -1,15 +1,70 @@
 import {
   DEFAULT_SUBJECT_NAMES,
   SUBJECT_COUNT,
-  TOPIC_COUNT,
   emptyTrabajoMatrix,
   type Section,
 } from "@/lib/constants";
 import { connectDB } from "@/lib/mongodb";
-import { GradeSheet, serializeSheet } from "@/models/GradeSheet";
-import type { GradeSheetData } from "@/types/grades";
+import {
+  GradeSheet,
+  migrateTrabajoMatrixToCells,
+  matrixHasGrades,
+  serializeSheet,
+  toPlainMatrix,
+} from "@/models/GradeSheet";
+import type { GradeSheetData, TopicCell } from "@/types/grades";
+import type { TeoriaSheetData } from "@/types/teoria";
+import { serializeTeoriaSheet } from "@/models/GradeSheet";
+import { getSubjectNames } from "@/lib/subjects";
 
-export async function getOrCreateSheet(section: Section): Promise<GradeSheetData> {
+async function withSubjectNames<T extends { subjectNames: string[] }>(
+  sheet: T,
+): Promise<T> {
+  return { ...sheet, subjectNames: await getSubjectNames() };
+}
+
+export async function getOrCreateTeoriaSheet(): Promise<TeoriaSheetData> {
+  await connectDB();
+
+  let doc = await GradeSheet.findOne({ section: "teoria" });
+  if (!doc) {
+    doc = await GradeSheet.create({ section: "teoria" });
+  }
+
+  return withSubjectNames(serializeTeoriaSheet(doc));
+}
+
+export async function toggleTeoriaTopic(
+  subjectIndex: number,
+  topicIndex: number,
+  completed: boolean,
+): Promise<TeoriaSheetData> {
+  await connectDB();
+
+  const doc = await GradeSheet.findOneAndUpdate(
+    { section: "teoria" },
+    {
+      $setOnInsert: {
+        section: "teoria",
+        subjectNames: DEFAULT_SUBJECT_NAMES,
+      },
+      $set: { [`teoriaCompleted.${subjectIndex}.${topicIndex}`]: completed },
+    },
+    { upsert: true, new: true },
+  );
+
+  return withSubjectNames(serializeTeoriaSheet(doc!));
+}
+
+export async function getOrCreateSheet(
+  section: "examen" | "trabajos" | "repaso",
+): Promise<GradeSheetData>;
+export async function getOrCreateSheet(section: Section): Promise<GradeSheetData | TeoriaSheetData>;
+export async function getOrCreateSheet(section: Section): Promise<GradeSheetData | TeoriaSheetData> {
+  if (section === "teoria") {
+    return getOrCreateTeoriaSheet();
+  }
+
   await connectDB();
 
   let doc = await GradeSheet.findOne({ section });
@@ -17,7 +72,18 @@ export async function getOrCreateSheet(section: Section): Promise<GradeSheetData
     doc = await GradeSheet.create({ section });
   }
 
-  return serializeSheet(doc, section);
+  if (section === "trabajos") {
+    const matrix = toPlainMatrix(doc.trabajoGrades);
+    const hasCells = (doc.trabajoCells?.length ?? 0) > 0;
+    if (!hasCells && matrixHasGrades(matrix)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      doc.trabajoCells = migrateTrabajoMatrixToCells(matrix) as any;
+      doc.markModified("trabajoCells");
+      await doc.save();
+    }
+  }
+
+  return withSubjectNames(serializeSheet(doc, section));
 }
 
 export async function updateExamenGrade(
@@ -33,6 +99,7 @@ export async function updateExamenGrade(
         section: "examen",
         subjectNames: DEFAULT_SUBJECT_NAMES,
         trabajoGrades: emptyTrabajoMatrix(),
+        trabajoCells: [],
         repasoCells: [],
       },
       $set: { [`examGrades.${subjectIndex}`]: grade },
@@ -40,60 +107,11 @@ export async function updateExamenGrade(
     { upsert: true, new: true },
   );
 
-  return serializeSheet(doc!, "examen");
+  return withSubjectNames(serializeSheet(doc!, "examen"));
 }
 
-export async function updateTrabajoGrade(
-  subjectIndex: number,
-  topicIndex: number,
-  grade: string,
-): Promise<GradeSheetData> {
-  await connectDB();
-
-  const doc = await GradeSheet.findOneAndUpdate(
-    { section: "trabajos" },
-    {
-      $setOnInsert: {
-        section: "trabajos",
-        subjectNames: DEFAULT_SUBJECT_NAMES,
-        examGrades: Array(SUBJECT_COUNT).fill(""),
-        repasoCells: [],
-      },
-      $set: { [`trabajoGrades.${subjectIndex}.${topicIndex}`]: grade },
-    },
-    { upsert: true, new: true },
-  );
-
-  return serializeSheet(doc!, "trabajos");
-}
-
-export async function addRepasoAttempt(
-  subjectIndex: number,
-  topicIndex: number,
-  grade: string,
-): Promise<GradeSheetData> {
-  await connectDB();
-
-  let doc = await GradeSheet.findOne({ section: "repaso" });
-  if (!doc) {
-    doc = await GradeSheet.create({ section: "repaso" });
-  }
-
-  const plain = serializeSheet(doc, "repaso");
-  const idx = plain.repasoCells.findIndex(
-    (c) => c.subjectIndex === subjectIndex && c.topicIndex === topicIndex,
-  );
-
-  const attemptNumber =
-    idx >= 0 ? plain.repasoCells[idx].attempts.length + 1 : 1;
-
-  const newAttempt = {
-    attemptNumber,
-    grade: grade.trim(),
-    createdAt: new Date(),
-  };
-
-  const repasoCells = plain.repasoCells.map((c) => ({
+function plainCells(cells: TopicCell[]) {
+  return cells.map((c) => ({
     subjectIndex: c.subjectIndex,
     topicIndex: c.topicIndex,
     attempts: c.attempts.map((a) => ({
@@ -102,11 +120,44 @@ export async function addRepasoAttempt(
       createdAt: new Date(a.createdAt),
     })),
   }));
+}
+
+async function addTopicCellGrade(
+  section: "trabajos" | "repaso",
+  cellsField: "trabajoCells" | "repasoCells",
+  subjectIndex: number,
+  topicIndex: number,
+  grade: string,
+): Promise<GradeSheetData> {
+  await connectDB();
+
+  let doc = await GradeSheet.findOne({ section });
+  if (!doc) {
+    doc = await GradeSheet.create({ section });
+  }
+
+  const plain = serializeSheet(doc, section);
+  const currentCells =
+    cellsField === "trabajoCells" ? plain.trabajoCells : plain.repasoCells;
+
+  const idx = currentCells.findIndex(
+    (c) => c.subjectIndex === subjectIndex && c.topicIndex === topicIndex,
+  );
+
+  const attemptNumber = idx >= 0 ? currentCells[idx].attempts.length + 1 : 1;
+
+  const newAttempt = {
+    attemptNumber,
+    grade: grade.trim(),
+    createdAt: new Date(),
+  };
+
+  const updatedCells = plainCells(currentCells);
 
   if (idx >= 0) {
-    repasoCells[idx].attempts.push(newAttempt);
+    updatedCells[idx].attempts.push(newAttempt);
   } else {
-    repasoCells.push({
+    updatedCells.push({
       subjectIndex,
       topicIndex,
       attempts: [newAttempt],
@@ -114,9 +165,37 @@ export async function addRepasoAttempt(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  doc.repasoCells = repasoCells as any;
-  doc.markModified("repasoCells");
+  doc[cellsField] = updatedCells as any;
+  doc.markModified(cellsField);
   await doc.save();
 
-  return serializeSheet(doc, "repaso");
+  return withSubjectNames(serializeSheet(doc, section));
+}
+
+export async function addTrabajoEntry(
+  subjectIndex: number,
+  topicIndex: number,
+  grade: string,
+): Promise<GradeSheetData> {
+  return addTopicCellGrade(
+    "trabajos",
+    "trabajoCells",
+    subjectIndex,
+    topicIndex,
+    grade,
+  );
+}
+
+export async function addRepasoAttempt(
+  subjectIndex: number,
+  topicIndex: number,
+  grade: string,
+): Promise<GradeSheetData> {
+  return addTopicCellGrade(
+    "repaso",
+    "repasoCells",
+    subjectIndex,
+    topicIndex,
+    grade,
+  );
 }

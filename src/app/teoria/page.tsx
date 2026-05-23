@@ -2,15 +2,15 @@ export const dynamic = "force-dynamic";
 
 import { DbErrorBanner } from "@/components/DbErrorBanner";
 import { PageLayout } from "@/components/PageLayout";
-import { RepasoTable } from "@/components/RepasoTable";
-import { getOrCreateSheet } from "@/lib/grades";
+import { TeoriaTable } from "@/components/TeoriaTable";
+import { getOrCreateTeoriaSheet } from "@/lib/grades";
 
-export default async function RepasoPage() {
+export default async function TeoriaPage() {
   let sheet = null;
   let error: string | null = null;
 
   try {
-    sheet = await getOrCreateSheet("repaso");
+    sheet = await getOrCreateTeoriaSheet();
   } catch (err) {
     error = err instanceof Error ? err.message : "Error de conexión";
   }
@@ -18,15 +18,15 @@ export default async function RepasoPage() {
   return (
     <PageLayout
       wide
-      title="Repaso"
-      subtitle="tests"
-      description="Cada celda guarda varios intentos de test (1ª, 2ª, 3ª…)."
+      title="Teoría"
+      subtitle="temas"
+      description="Marca cada tema cuando lo hayas terminado de estudiar."
     >
       {error ? (
         <DbErrorBanner message={error} />
       ) : sheet ? (
         <div className="mt-2">
-          <RepasoTable initial={sheet} />
+          <TeoriaTable initial={sheet} />
         </div>
       ) : null}
     </PageLayout>

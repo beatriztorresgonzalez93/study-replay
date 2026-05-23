@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SECTION_LABELS, type Section } from "@/lib/constants";
+import { SECTION_LABELS, TFG_LABEL } from "@/lib/constants";
 
-const links: { href: string; section: Section; accent: string }[] = [
-  { href: "/examen", section: "examen", accent: "border-fuchsia-500/50 text-fuchsia-300" },
-  { href: "/trabajos", section: "trabajos", accent: "border-cyan-500/50 text-cyan-300" },
-  { href: "/repaso", section: "repaso", accent: "border-emerald-500/50 text-emerald-300" },
+const links: { href: string; label: string; accent: string }[] = [
+  { href: "/teoria", label: SECTION_LABELS.teoria, accent: "border-amber-500/50 text-amber-300" },
+  { href: "/examen", label: SECTION_LABELS.examen, accent: "border-fuchsia-500/50 text-fuchsia-300" },
+  { href: "/trabajos", label: SECTION_LABELS.trabajos, accent: "border-cyan-500/50 text-cyan-300" },
+  { href: "/repaso", label: SECTION_LABELS.repaso, accent: "border-emerald-500/50 text-emerald-300" },
+  { href: "/tfg", label: TFG_LABEL, accent: "border-violet-500/50 text-violet-300" },
 ];
 
 export function SectionNav() {
@@ -25,7 +27,7 @@ export function SectionNav() {
       >
         Inicio
       </Link>
-      {links.map(({ href, section, accent }) => {
+      {links.map(({ href, label, accent }) => {
         const active = pathname === href;
         return (
           <Link
@@ -37,7 +39,7 @@ export function SectionNav() {
                 : "border-white/[0.06] text-zinc-500 hover:border-white/10 hover:text-zinc-300"
             }`}
           >
-            {SECTION_LABELS[section]}
+            {label}
           </Link>
         );
       })}

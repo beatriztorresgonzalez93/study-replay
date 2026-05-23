@@ -200,6 +200,29 @@ body {
 .table-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem 0.25rem;
+}
+
+.table-scroll-hint {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #52525b;
+  text-align: center;
+  padding-bottom: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .table-scroll-hint {
+    display: none;
+  }
+}
+
+.teoria-check {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
 }
 
 .grade-table {
@@ -229,7 +252,8 @@ body {
   left: 0;
   z-index: 2;
   background: #0c0c14;
-  min-width: 7rem;
+  min-width: 6.5rem;
+  box-shadow: 4px 0 12px -4px rgba(0, 0, 0, 0.5);
 }
 
 .grade-table td {
@@ -264,9 +288,50 @@ body {
   box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.12);
 }
 
+.page-main {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  flex: 1;
+  padding: 1.25rem 1rem 7rem;
+}
+
+@media (min-width: 768px) {
+  .page-main {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+}
+
+.page-description {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 .subject-label {
+  display: block;
   font-size: 0.8125rem;
   font-weight: 500;
+  line-height: 1.35;
   color: #e4e4e7;
-  padding: 0.5rem 0.25rem;
+  padding: 0.5rem 0.35rem;
+  max-width: 8.5rem;
+  word-break: break-word;
+}
+
+@media (min-width: 768px) {
+  .grade-table th:first-child,
+  .grade-table td:first-child {
+    min-width: 8.5rem;
+  }
+}
+
+.teoria-table th:first-child,
+.teoria-table td:first-child {
+  background: #12100a;
+}
+
+.teoria-table tbody tr:hover td:first-child {
+  background: #18140c;
 }

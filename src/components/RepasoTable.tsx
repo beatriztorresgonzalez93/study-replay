@@ -102,6 +102,7 @@ export function RepasoTable({ initial }: { initial: GradeSheetData }) {
 
   return (
     <div className="glass rounded-2xl p-3 md:p-4">
+      <p className="table-scroll-hint">← Desliza para ver todos los temas →</p>
       <div className="table-scroll">
         <table className="grade-table">
           <thead>

@@ -11,7 +11,7 @@ export const DEFAULT_TOPIC_NAMES = Array.from(
   (_, i) => `T${i + 1}`,
 );
 
-export const SECTIONS = ["examen", "trabajos", "repaso"] as const;
+export const SECTIONS = ["examen", "trabajos", "repaso", "teoria"] as const;
 
 export type Section = (typeof SECTIONS)[number];
 
@@ -19,7 +19,16 @@ export const SECTION_LABELS: Record<Section, string> = {
   examen: "Examen",
   trabajos: "Trabajos",
   repaso: "Repaso",
+  teoria: "Teoría",
 };
+
+export const TFG_LABEL = "TFG";
+
+export function emptyBooleanMatrix(): boolean[][] {
+  return Array.from({ length: SUBJECT_COUNT }, () =>
+    Array(TOPIC_COUNT).fill(false),
+  );
+}
 
 export function emptyTrabajoMatrix(): string[][] {
   return Array.from({ length: SUBJECT_COUNT }, () =>

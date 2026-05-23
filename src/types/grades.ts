@@ -1,21 +1,27 @@
 import type { Section } from "@/lib/constants";
 
-export interface RepasoAttempt {
+export interface GradeAttempt {
   attemptNumber: number;
   grade: string;
   createdAt: string;
 }
 
-export interface RepasoCell {
+export interface TopicCell {
   subjectIndex: number;
   topicIndex: number;
-  attempts: RepasoAttempt[];
+  attempts: GradeAttempt[];
 }
+
+/** @deprecated Usar GradeAttempt */
+export type RepasoAttempt = GradeAttempt;
+
+/** @deprecated Usar TopicCell */
+export type RepasoCell = TopicCell;
 
 export interface GradeSheetData {
   section: Section;
   subjectNames: string[];
   examGrades: string[];
-  trabajoGrades: string[][];
-  repasoCells: RepasoCell[];
+  trabajoCells: TopicCell[];
+  repasoCells: TopicCell[];
 }

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { SUBJECT_COUNT, TOPIC_COUNT } from "@/lib/constants";
-import { addTrabajoEntry } from "@/lib/grades";
+import { toggleTeoriaTopic } from "@/lib/grades";
 
-export async function POST(request: Request) {
+export async function PATCH(request: Request) {
   try {
-    const { subjectIndex, topicIndex, grade } = await request.json();
+    const { subjectIndex, topicIndex, completed } = await request.json();
 
     if (
       typeof subjectIndex !== "number" ||
@@ -12,17 +12,13 @@ export async function POST(request: Request) {
       subjectIndex >= SUBJECT_COUNT ||
       typeof topicIndex !== "number" ||
       topicIndex < 0 ||
-      topicIndex >= TOPIC_COUNT
+      topicIndex >= TOPIC_COUNT ||
+      typeof completed !== "boolean"
     ) {
       return NextResponse.json({ error: "Celda no válida" }, { status: 400 });
     }
 
-    const trimmed = String(grade ?? "").trim();
-    if (!trimmed) {
-      return NextResponse.json({ error: "Escribe una nota" }, { status: 400 });
-    }
-
-    const sheet = await addTrabajoEntry(subjectIndex, topicIndex, trimmed);
+    const sheet = await toggleTeoriaTopic(subjectIndex, topicIndex, completed);
     return NextResponse.json(sheet);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error al guardar";

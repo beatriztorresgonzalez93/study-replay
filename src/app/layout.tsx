@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Syne } from "next/font/google";
 import { AppBackground } from "@/components/AppBackground";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,7 +37,10 @@ export default function RootLayout({
     >
       <body className="relative min-h-full flex flex-col text-zinc-100">
         <AppBackground />
-        <div className="relative z-10 flex min-h-full flex-col">{children}</div>
+        <div className="relative z-10 flex min-h-full flex-col">
+          {children}
+          <MobileBottomNav />
+        </div>
       </body>
     </html>
   );
