@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SECTION_LABELS, TFG_LABEL } from "@/lib/constants";
+import { SECTION_LABELS, SUBJECTS_PAGE_LABEL, TFG_LABEL } from "@/lib/constants";
 
 const links: { href: string; label: string; accent: string }[] = [
+  {
+    href: "/asignaturas",
+    label: SUBJECTS_PAGE_LABEL,
+    accent: "border-zinc-400/50 text-zinc-300",
+  },
   { href: "/teoria", label: SECTION_LABELS.teoria, accent: "border-amber-500/50 text-amber-300" },
   { href: "/examen", label: SECTION_LABELS.examen, accent: "border-fuchsia-500/50 text-fuchsia-300" },
   { href: "/trabajos", label: SECTION_LABELS.trabajos, accent: "border-cyan-500/50 text-cyan-300" },

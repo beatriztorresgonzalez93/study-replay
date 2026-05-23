@@ -30,6 +30,8 @@ export const SECTION_LABELS: Record<Section, string> = {
 
 export const TFG_LABEL = "TFG";
 
+export const SUBJECTS_PAGE_LABEL = "Mis asignaturas";
+
 export function emptyBooleanMatrix(): boolean[][] {
   return Array.from({ length: SUBJECT_COUNT }, () =>
     Array(TOPIC_COUNT).fill(false),

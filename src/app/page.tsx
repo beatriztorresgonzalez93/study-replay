@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { PageLayout } from "@/components/PageLayout";
-import { SubjectNamesEditor } from "@/components/SubjectNamesEditor";
 import { SECTION_LABELS, TFG_LABEL } from "@/lib/constants";
-import { getSubjectNames } from "@/lib/subjects";
 
 const cards = [
   {
@@ -47,51 +45,33 @@ const cards = [
   },
 ] as const;
 
-export default async function Home() {
-  let subjectNames: string[] = [];
-  let subjectsError = false;
-
-  try {
-    subjectNames = await getSubjectNames();
-  } catch {
-    subjectsError = true;
-  }
-
+export default function Home() {
   return (
-    <PageLayout wide>
-      <div className="mt-2 space-y-6 md:mt-4">
-        {!subjectsError && (
-          <SubjectNamesEditor initialNames={subjectNames} />
-        )}
-
-        <section>
-          <h2 className="label-tech mb-3">Secciones</h2>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {cards.map(({ title, href, desc, gradient, border, accent }) => (
-              <li key={href}>
-                <Link
-                  href={href}
-                  className={`glass glass-hover relative flex h-full flex-col overflow-hidden rounded-2xl border p-5 ${border}`}
-                >
-                  <div
-                    className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient}`}
-                    aria-hidden
-                  />
-                  <div className="relative flex flex-1 flex-col">
-                    <h3 className="font-[family-name:var(--font-syne)] text-lg font-semibold text-zinc-50">
-                      {title}
-                    </h3>
-                    <p className={`mt-2 flex-1 text-sm ${accent}`}>{desc}</p>
-                    <span className="label-tech mt-4 text-zinc-600">
-                      Abrir →
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
+    <PageLayout wide description="Elige una sección para empezar.">
+      <ul className="mt-2 grid gap-3 sm:grid-cols-2">
+        {cards.map(({ title, href, desc, gradient, border, accent }) => (
+          <li key={href}>
+            <Link
+              href={href}
+              className={`glass glass-hover relative flex h-full min-h-[7.5rem] flex-col overflow-hidden rounded-2xl border p-5 ${border}`}
+            >
+              <div
+                className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${gradient}`}
+                aria-hidden
+              />
+              <div className="relative flex flex-1 flex-col">
+                <h2 className="font-[family-name:var(--font-syne)] text-lg font-semibold text-zinc-50">
+                  {title}
+                </h2>
+                <p className={`mt-2 flex-1 text-sm leading-relaxed ${accent}`}>
+                  {desc}
+                </p>
+                <span className="label-tech mt-4 text-zinc-600">Abrir →</span>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </PageLayout>
   );
 }

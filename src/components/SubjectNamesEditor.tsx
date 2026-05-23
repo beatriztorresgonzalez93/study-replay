@@ -35,14 +35,10 @@ export function SubjectNamesEditor({
 
   return (
     <section className="glass rounded-2xl border-cyan-500/10 p-4 md:p-5">
-      <div className="mb-4">
-        <h2 className="font-[family-name:var(--font-syne)] text-lg font-semibold text-zinc-50">
-          Mis asignaturas
-        </h2>
-        <p className="mt-1 text-sm text-zinc-500">
-          Pon el nombre real de cada una. Se usa en todas las pestañas.
-        </p>
-      </div>
+      <p className="mb-4 text-sm text-zinc-500">
+        Pon el nombre real de cada una. Los cambios se aplican en todas las
+        secciones.
+      </p>
       <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {Array.from({ length: SUBJECT_COUNT }, (_, i) => (
           <li key={i}>
