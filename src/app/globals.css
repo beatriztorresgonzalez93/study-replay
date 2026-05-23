@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #030306;
+  --bg-elevated: #0a0a10;
+  --bg-card: rgba(12, 12, 20, 0.65);
+  --border: rgba(255, 255, 255, 0.07);
+  --border-glow: rgba(34, 211, 238, 0.25);
+  --foreground: #f4f4f5;
+  --muted: #71717a;
+  --accent: #22d3ee;
+  --accent-2: #a78bfa;
+  --background: var(--bg);
 }
 
 @theme inline {
@@ -10,17 +18,181 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-syne);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
+  background: var(--bg);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Ambient background */
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 211, 238, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 50%, rgba(167, 139, 250, 0.08), transparent),
+    radial-gradient(ellipse 50% 30% at 0% 80%, rgba(244, 114, 182, 0.06), transparent),
+    var(--bg);
+}
+
+.app-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 75%);
+}
+
+/* Reusable UI */
+.glass {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-hover {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.glass-hover:hover {
+  border-color: var(--border-glow);
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.08),
+    0 8px 32px -8px rgba(0, 0, 0, 0.5),
+    0 0 40px -12px rgba(34, 211, 238, 0.15);
+  transform: translateY(-1px);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #22d3ee 0%, #a78bfa 50%, #e879f9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.label-tech {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.input-tech {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  color: var(--foreground);
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.input-tech::placeholder {
+  color: #52525b;
+}
+
+.input-tech:focus {
+  border-color: rgba(34, 211, 238, 0.45);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12);
+}
+
+.btn-primary {
+  border-radius: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  font-weight: 600;
+  color: #030306;
+  background: linear-gradient(135deg, #22d3ee, #67e8f9);
+  box-shadow:
+    0 0 24px -4px rgba(34, 211, 238, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 32px -4px rgba(34, 211, 238, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.btn-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.btn-danger {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fda4af;
+  background: rgba(244, 63, 94, 0.08);
+  transition: background 0.2s ease;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.15);
+}
+
+.fab-glow {
+  background: linear-gradient(135deg, #22d3ee, #a78bfa);
+  box-shadow:
+    0 0 40px -8px rgba(34, 211, 238, 0.6),
+    0 8px 24px -8px rgba(0, 0, 0, 0.8);
+}
+
+.fab-glow:hover {
+  box-shadow:
+    0 0 48px -4px rgba(34, 211, 238, 0.75),
+    0 12px 28px -8px rgba(0, 0, 0, 0.8);
+  transform: scale(1.05);
+}
+
+.fab-glow:active {
+  transform: scale(0.97);
 }

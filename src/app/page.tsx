@@ -1,65 +1,99 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Suspense } from "react";
+import { AppHeader } from "@/components/AppHeader";
+import { NoteCard } from "@/components/NoteCard";
+import { NotesFilter } from "@/components/NotesFilter";
+import { getNotes } from "@/lib/notes";
+import { NOTE_TYPES, type NoteType } from "@/types/note";
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>;
+}) {
+  const params = await searchParams;
+  const type =
+    params.type && NOTE_TYPES.includes(params.type as NoteType)
+      ? (params.type as NoteType)
+      : undefined;
+
+  let notes: Awaited<ReturnType<typeof getNotes>> = [];
+  let dbError = false;
+
+  try {
+    notes = await getNotes({ type });
+  } catch {
+    dbError = true;
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <AppHeader />
+
+      <main className="mx-auto max-w-2xl flex-1 px-4 py-5 pb-28">
+        <section className="mb-6">
+          <p className="max-w-sm text-sm leading-relaxed text-zinc-500">
+            Tus apuntes de{" "}
+            <span className="text-cyan-400/90">exámenes</span>,{" "}
+            <span className="text-violet-400/90">trabajos</span> y{" "}
+            <span className="text-emerald-400/90">repaso</span> en un solo sitio.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          {!dbError && notes.length > 0 && (
+            <p className="label-tech mt-3">
+              {notes.length} {notes.length === 1 ? "entrada" : "entradas"}
+              {type ? ` · filtro activo` : ""}
+            </p>
+          )}
+        </section>
+
+        <Suspense fallback={<div className="h-10 animate-pulse rounded-full bg-white/5" />}>
+          <NotesFilter />
+        </Suspense>
+
+        {dbError ? (
+          <div className="glass mt-8 rounded-2xl border-amber-500/20 p-5">
+            <p className="font-mono text-xs uppercase tracking-widest text-amber-400/80">
+              // connection_error
+            </p>
+            <p className="mt-2 font-semibold text-amber-200">MongoDB no conectado</p>
+            <p className="mt-2 text-sm text-zinc-500">
+              Crea{" "}
+              <code className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-xs text-cyan-400">
+                .env.local
+              </code>{" "}
+              con{" "}
+              <code className="rounded bg-black/40 px-1.5 py-0.5 font-mono text-xs text-cyan-400">
+                MONGODB_URI
+              </code>{" "}
+              y reinicia el servidor.
+            </p>
+          </div>
+        ) : notes.length === 0 ? (
+          <div className="glass mt-16 rounded-2xl p-10 text-center">
+            <p className="font-mono text-4xl text-zinc-700">∅</p>
+            <p className="mt-3 text-zinc-500">Sin notas todavía</p>
+            <Link href="/nueva" className="btn-primary mt-6 inline-block text-sm">
+              Crear primera nota
+            </Link>
+          </div>
+        ) : (
+          <ul className="mt-5 flex flex-col gap-3">
+            {notes.map((note) => (
+              <li key={note._id}>
+                <NoteCard note={note} />
+              </li>
+            ))}
+          </ul>
+        )}
       </main>
-    </div>
+
+      <Link
+        href="/nueva"
+        className="fab-glow fixed bottom-6 right-5 z-30 flex h-14 w-14 items-center justify-center rounded-2xl text-2xl font-light text-[#030306] transition"
+        aria-label="Nueva nota"
+      >
+        +
+      </Link>
+    </>
   );
 }
