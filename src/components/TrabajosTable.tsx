@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { SubjectCardsMobile } from "@/components/SubjectCardsMobile";
 import {
   DEFAULT_TOPIC_NAMES,
   SUBJECT_COUNT,
@@ -51,7 +52,7 @@ function TrabajoCellEditor({
   }
 
   return (
-    <div className="min-w-[5.5rem] space-y-1.5 py-1">
+    <div className="w-full min-w-0 space-y-1.5">
       {attempts.length === 0 ? (
         <p className="text-center font-mono text-[10px] text-zinc-600">sin trabajos</p>
       ) : (
@@ -59,21 +60,21 @@ function TrabajoCellEditor({
           {attempts.map((a) => (
             <li
               key={`${a.attemptNumber}-${a.createdAt}`}
-              className="flex items-center justify-between gap-1 rounded border border-white/[0.06] bg-black/30 px-1.5 py-0.5"
+              className="flex items-center justify-between gap-2 rounded border border-white/[0.06] bg-black/30 px-2 py-1"
             >
               <span className="font-mono text-[10px] text-cyan-500/80">
                 {entryLabel(a.attemptNumber, "trabajo")}
               </span>
-              <span className="text-xs font-medium text-zinc-200">{a.grade}</span>
+              <span className="text-sm font-medium text-zinc-200">{a.grade}</span>
             </li>
           ))}
         </ul>
       )}
-      <div className="flex gap-1">
+      <div className="flex gap-2">
         <input
           type="text"
           inputMode="decimal"
-          className="cell-input !min-w-0 flex-1 !px-1.5 !py-1 text-xs"
+          className="cell-input min-w-0 flex-1 text-sm"
           placeholder={
             attempts.length === 0
               ? "1º"
@@ -90,7 +91,7 @@ function TrabajoCellEditor({
           type="button"
           onClick={addEntry}
           disabled={loading || !value.trim()}
-          className="shrink-0 rounded-md bg-cyan-500/20 px-2 py-1 font-mono text-[10px] font-medium text-cyan-300 transition hover:bg-cyan-500/30 disabled:opacity-40"
+          className="shrink-0 rounded-lg bg-cyan-500/20 px-3 py-2 font-mono text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/30 disabled:opacity-40"
           title="Añadir trabajo"
         >
           +
@@ -104,43 +105,73 @@ export function TrabajosTable({ initial }: { initial: GradeSheetData }) {
   const router = useRouter();
   const [cells, setCells] = useState(initial.trabajoCells);
 
+  const onSaved = (updated: GradeSheetData["trabajoCells"]) => {
+    setCells(updated);
+    router.refresh();
+  };
+
   return (
     <div className="glass rounded-2xl p-3 md:p-4">
-      <p className="table-scroll-hint">← Desliza para ver todos los temas →</p>
-      <div className="table-scroll">
-        <table className="grade-table">
-          <thead>
-            <tr>
-              <th>Asignatura</th>
-              {DEFAULT_TOPIC_NAMES.map((name) => (
-                <th key={name}>{name}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: SUBJECT_COUNT }, (_, si) => (
-              <tr key={si}>
-                <td>
-                  <span className="subject-label">{initial.subjectNames[si]}</span>
-                </td>
-                {Array.from({ length: TOPIC_COUNT }, (_, ti) => (
-                  <td key={ti}>
-                    <TrabajoCellEditor
-                      subjectIndex={si}
-                      topicIndex={ti}
-                      attempts={getAttemptsForCell(cells, si, ti)}
-                      onSaved={(updated) => {
-                        setCells(updated);
-                        router.refresh();
-                      }}
-                    />
-                  </td>
+      <SubjectCardsMobile
+        subjectNames={initial.subjectNames}
+        borderClass="border-cyan-500/20"
+      >
+        {(si) => (
+          <div className="space-y-2">
+            {Array.from({ length: TOPIC_COUNT }, (_, ti) => (
+              <div
+                key={ti}
+                className="rounded-xl border border-white/[0.06] bg-black/20 p-3"
+              >
+                <p className="label-tech mb-2 text-cyan-500/70">
+                  {DEFAULT_TOPIC_NAMES[ti]}
+                </p>
+                <TrabajoCellEditor
+                  subjectIndex={si}
+                  topicIndex={ti}
+                  attempts={getAttemptsForCell(cells, si, ti)}
+                  onSaved={onSaved}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </SubjectCardsMobile>
+
+      <div className="hidden md:block">
+        <div className="table-scroll">
+          <table className="grade-table">
+            <thead>
+              <tr>
+                <th>Asignatura</th>
+                {DEFAULT_TOPIC_NAMES.map((name) => (
+                  <th key={name}>{name}</th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {Array.from({ length: SUBJECT_COUNT }, (_, si) => (
+                <tr key={si}>
+                  <td>
+                    <span className="subject-label">{initial.subjectNames[si]}</span>
+                  </td>
+                  {Array.from({ length: TOPIC_COUNT }, (_, ti) => (
+                    <td key={ti}>
+                      <TrabajoCellEditor
+                        subjectIndex={si}
+                        topicIndex={ti}
+                        attempts={getAttemptsForCell(cells, si, ti)}
+                        onSaved={onSaved}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
       <p className="label-tech mt-3 px-1">
         Cada + añade un trabajo más en ese tema (1º, 2º, 3º…)
       </p>
