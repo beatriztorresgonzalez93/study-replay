@@ -11,6 +11,12 @@ function normalizeNames(names: string[]): string[] {
   });
 }
 
+function isPlaceholderNames(names: string[]): boolean {
+  return Array.from({ length: SUBJECT_COUNT }, (_, i) => names[i]).every(
+    (n, i) => n === `Asignatura ${i + 1}`,
+  );
+}
+
 export async function getSubjectNames(): Promise<string[]> {
   await connectDB();
 
@@ -28,7 +34,18 @@ export async function getSubjectNames(): Promise<string[]> {
     );
   }
 
-  return normalizeNames(doc?.subjectNames ?? DEFAULT_SUBJECT_NAMES);
+  const stored = doc?.subjectNames ?? [];
+  const names = normalizeNames([...stored]);
+
+  if (stored.length > 0 && isPlaceholderNames(names)) {
+    return updateSubjectNames([...DEFAULT_SUBJECT_NAMES]);
+  }
+
+  if (!doc) {
+    return updateSubjectNames([...DEFAULT_SUBJECT_NAMES]);
+  }
+
+  return names;
 }
 
 export async function updateSubjectNames(names: string[]): Promise<string[]> {

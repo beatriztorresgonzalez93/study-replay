@@ -1,10 +1,16 @@
 export const SUBJECT_COUNT = 8;
 export const TOPIC_COUNT = 9;
 
-export const DEFAULT_SUBJECT_NAMES = Array.from(
-  { length: SUBJECT_COUNT },
-  (_, i) => `Asignatura ${i + 1}`,
-);
+export const DEFAULT_SUBJECT_NAMES = [
+  "Sistemas programables avanzados",
+  "Robótica industrial",
+  "Comunicaciones industriales",
+  "Integración de sistemas de automatización industrial",
+  "Simulación de sistemas mecatrónicos",
+  "Proyecto de automatización y robótica industrial",
+  "Itinerario para la empleabilidad II",
+  "Asignatura 8",
+];
 
 export const DEFAULT_TOPIC_NAMES = Array.from(
   { length: TOPIC_COUNT },
