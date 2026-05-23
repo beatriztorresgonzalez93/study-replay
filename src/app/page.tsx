@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { PageLayout } from "@/components/PageLayout";
-import { SECTION_LABELS, TFG_LABEL } from "@/lib/constants";
+import { SECTION_LABELS, SUBJECTS_PAGE_LABEL, TFG_LABEL } from "@/lib/constants";
 
 const cards = [
+  {
+    title: SUBJECTS_PAGE_LABEL,
+    href: "/asignaturas",
+    desc: "Edita los nombres de tus 8 asignaturas",
+    gradient: "from-rose-500/25 to-transparent",
+    border: "border-rose-500/25 hover:border-rose-500/40",
+    accent: "text-rose-400/80",
+  },
   {
     title: SECTION_LABELS.teoria,
     href: "/teoria",
